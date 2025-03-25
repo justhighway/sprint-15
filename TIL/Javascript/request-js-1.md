@@ -229,3 +229,49 @@ export async function deleteAvatar(id) {
   return data;
 }
 ```
+
+## 4. fetch 예외 처리하기
+
+`fetch`를 사용할 때 발생하는 오류는 크게 두 가지로 나눌 수 있다.
+
+### 1) 네트워크 오류 또는 요청 자체의 문제
+
+- 잘못된 URL, 헤더 정보 오류 등으로 인해 요청 자체가 실패하는 경우
+- 이때 fetch는 Promise를 rejected 상태로 반환함
+
+### 2) 잘못된 요청 데이터(쿼리 스트링, 파라미터 등)로 인해 서버 응답이 실패
+
+- 요청은 정상적으로 이루어졌지만, 서버에서 4xx(클라이언트 오류) 또는 5xx(서버 오류) 상태 코드를 반환하는 경우
+- 이 경우 `fetch`는 `Promise`를 fulfilled(성공) 상태로 반환하지만, 응답의 `status` 값이 오류 코드(4xx, 5xx)일 수 있음
+
+`try...catch` 문을 사용하면 첫 번째 경우(네트워크 오류)는 잡을 수 있지만, 두 번째 경우(HTTP 상태 코드 오류)는 자동으로 처리되지 않는다.
+
+따라서, 응답 객체의 `res.ok` 속성을 확인하여 **상태 코드가 2xx(성공)가 아닐 경우 명시적으로 오류를 발생**시켜야 한다.
+
+### 예제:
+
+다음과 같이 `getColorSurveys()`를 수정하면, 네트워크 오류뿐만 아니라 잘못된 요청으로 인해 서버가 4xx 또는 5xx 응답을 반환하는 경우도 예외 처리 가능하다.
+
+```js
+export async function getColorSurveys(params = {}) {
+  const url = new URL("https://...");
+  Object.keys(params).forEach((key) => {
+    url.searchParams.append(key, params[key]);
+  });
+
+  try {
+    const res = await fetch(url);
+
+    // 응답 상태 코드가 2xx가 아닐 경우 오류 발생
+    if (!res.ok) {
+      throw new Error(`요청 실패: ${res.status} ${res.statusText}`);
+    }
+
+    const data = await res.json();
+    return data;
+  } catch (error) {
+    console.error("데이터를 불러오는 중 오류 발생:", error);
+    throw error; // 호출한 함수에서도 오류를 감지할 수 있도록 다시 던짐
+  }
+}
+```
