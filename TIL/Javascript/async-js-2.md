@@ -29,6 +29,7 @@ console.log(data); // [ {...} ]
 
 - `Promise`를 반환하는 표현식 앞에 `await`을 붙이면 결과 값을 직접 받아올 수 있다.
 - `await`은 `Promise`가 완료될 때까지 기다린 후 결과 값을 반환한다.
+- 프로미스 객체의 값을 가져오려면 무조건 객체 앞에 `await`을 붙여야 한다.
 
 ## 2. async
 
@@ -84,12 +85,14 @@ Task 3
 ]
 ```
 
-`async` 함수가 실행될 때 내부의 `await`이 코드 실행을 블로킹하지 않기 때문이다. 즉, `await`이 있는 부분에서 `Promise`가 완료될 때까지 기다리는 동안, 함수 바깥의 코드가 먼저 실행된다.
+`async` 함수가 실행될 때 내부의 `await`이 코드 실행을 블로킹하지 않는다. 즉, `async` 함수는 안에서 `await`을 마주치면 함수 바깥으로 나가서 다른 동기 코드를 실행한다.
+
+이후 `Promise` 객체가 fulfilled 또는 rejected 상태가 되면 다시 함수 안으로 돌아와 코드를 실행한다.
 
 ### 정리
 
 - `async` 함수 내부에서 `await`을 사용하여 비동기 작업을 처리할 수 있다.
-- `async` 함수는 비동기 작업이 완료될 때까지 기다리지 않고, 다음 코드 실행을 계속 진행한다.
+- `async` 함수는 `await`을 마주치면 비동기 작업이 완료될 때까지 기다리지 않고, 함수 바깥으로 나가서 다른 코드 실행을 계속 진행한다.
 
 ## 3. 효율적인 async / await 코드
 
@@ -162,6 +165,9 @@ print(3);
 
 `async` 함수는 무조건 `Promise`를 반환한다.
 
+- 함수 안에서 Promise를 리턴하면 그 Promise를 그대로 리턴한다.
+- 함수 안에서 평범한 값을 리턴하면 그 값을 결괏값으로 갖는 Promise를 리턴한다.
+
 ```js
 async function print() {
   const response = await fetch("http://...");
@@ -173,7 +179,7 @@ const result = print();
 console.log(result); // Promise<Pending>
 ```
 
-비동기 함수의 반환 값을 사용하려면 `await`을 붙여야 한다.
+`async` 함수에서 리턴하는 값을 가져오려면 `await`을 활용해야 한다.
 
 ```js
 async function print() {
