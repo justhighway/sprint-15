@@ -104,11 +104,77 @@ fetch("https://jsonplaceholder.typicode.com/posts", {
 
 3. 브라우저에서만 동작하며, Node.js 환경에서는 직접 사용할 수 없음 → node-fetch 같은 라이브러리 필요
 
-#### 3) axios
+### 3) axios
 
-- 비동기 HTTP 요청을 쉽게 만들 수 있도록 도와주는 라이브러리
-- 응답 데이터를 자동으로 JSON으로 변환하거나, 요청과 응답을 인터셉트할 수 있는 기능 지원
-- Promise 기반으로 작동하므로 비동기 처리가 수월하고 다양한 옵션을 제공
+- fetch보다 더욱 강력한 기능을 제공하는 비동기 HTTP 요청 라이브러리
+- Promise 기반으로 동작하며, JSON 변환을 자동으로 수행
+- 요청과 응답을 쉽게 처리할 수 있는 인터셉터 기능을 제공
+
+### ✅ 특징
+
+- `fetch`보다 더 사용하기 편리하고 기능이 풍부
+- 자동으로 JSON 데이터를 변환해 주므로 `response.json()`을 호출할 필요 없음
+- 요청 및 응답을 **인터셉트(가로채서 처리)**할 수 있어 공통적인 요청 로직을 쉽게 정의 가능
+- 기본적으로 타임아웃, 요청 취소 기능을 제공
+
+### ✅ 사용 예시 (GET 요청)
+
+```js
+axios
+  .get("https://jsonplaceholder.typicode.com/posts/1")
+  .then((response) => console.log(response.data))
+  .catch((error) => console.error("Axios error:", error));
+```
+
+### ✅ 사용 예시 (POST 요청)
+
+```js
+axios
+  .post("https://jsonplaceholder.typicode.com/posts", {
+    title: "New Post",
+    body: "This is a new post",
+    userId: 1,
+  })
+  .then((response) => console.log("Created:", response.data))
+  .catch((error) => console.error("Error:", error));
+```
+
+### ✅ Axios의 추가 기능
+
+#### 1. 요청 인터셉터 / 응답 인터셉터
+
+- 모든 요청 또는 응답을 가로채서 특정 처리를 수행할 수 있음
+
+```js
+axios.interceptors.request.use((config) => {
+  console.log("요청 전 처리");
+  return config;
+});
+```
+
+#### 2. 타임아웃 설정 가능
+
+```js
+axios
+  .get("https://example.com", { timeout: 5000 }) // 5초 제한
+  .then((response) => console.log(response.data))
+  .catch((error) => console.error("Timeout error:", error));
+```
+
+#### 3. 동시에 여러 개의 요청 처리 (axios.all)
+
+```js
+axios
+  .all([
+    axios.get("https://jsonplaceholder.typicode.com/posts/1"),
+    axios.get("https://jsonplaceholder.typicode.com/posts/2"),
+  ])
+  .then(
+    axios.spread((post1, post2) => {
+      console.log(post1.data, post2.data);
+    })
+  );
+```
 
 ## 2. fetch()
 
