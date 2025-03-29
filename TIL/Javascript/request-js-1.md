@@ -3,30 +3,106 @@
 ## 1. AJAX
 
 - **A**synchronous **J**avaScript **A**nd **X**ML
-- **비동기적으로 자바스크립트 코드로 서버에 요청을 보내고 응답을 받아오는 기술**
-- 과거에는 XML로 데이터를 많이 주고받아 명명되었지만 현재는 JSON 형식이 일반적
+- AJAX는 웹 페이지를 새로고침하지 않고도 **서버와 비동기적으로 데이터를 주고받는 기술**
+- 과거에는 주로 XML 형식을 사용했기 때문에 “AJAX”라는 이름이 붙었지만, 현재는 JSON을 활용하는 것이 일반적
 
-### 요청과 응답을 비동기적으로 처리해야 하는 이유?
+### 📌 AJAX를 사용하는 이유
 
-- 페이지를 새로고침하지 않고 서버와 데이터를 주고받을 수 있게 해줌
-- 모든 코드가 동기적으로 실행되면, 서버의 응답을 받아야 하는 등의 시간이 오래 걸리는 작업을 기다리는 동안 웹 페이지가 멈추게 되어 사용자 경험이 나빠짐
-- 비동기 처리를 통해 이러한 대기 시간을 피하고, 서버와의 통신 중에도 다른 작업을 진행할 수 있어 전반적인 사용자 경험을 크게 향상시킬 수 있음
+#### 페이지 새로고침 없이 서버와 데이터 교환 가능
 
-### AJAX 기술
+- 전통적인 방식에서는 서버에 요청을 보낼 때마다 페이지가 새로고침되어야 했음
+- AJAX를 사용하면 페이지를 유지한 채로 필요한 데이터만 주고받을 수 있음
 
-#### 1) XMLHttpRequest
+#### 비동기 처리를 통한 성능 및 사용자 경험 향상
+
+- 서버 응답을 기다리느라 웹 페이지가 멈추는 현상을 방지하고, 사용자에게 더 부드러운 경험을 제공
+
+#### 서버 리소스 절약
+
+- 페이지 전체를 다시 로드하는 대신, 필요한 데이터만 가져옴
+- 때문에 트래픽을 줄이고 서버 부하를 감소시킬 수 있습니다.
+
+## 2. AJAX 주요 기술
+
+### 1) XMLHttpRequest
+
+- AJAX의 가장 초기 기술로, HTTP 요청을 비동기적으로 보내고 응답을 받을 수 있도록 설계된 객체
+- GET, POST 요청을 포함한 다양한 HTTP 요청을 지원하며, 데이터 수신 후 특정 동작을 수행할 수 있다.
+
+### 특징
 
 - 가장 오래된 AJAX 기술
-- 서버와의 비동기 통신을 위해 사용
-- 기본적인 HTTP 요청을 보내고 응답을 처리하는 데 사용
-- 코드가 복잡하고 사용하기 어려워 다른 대체 기술들이 등장
+- 비동기 요청을 보낼 수 있으나 코드가 복잡하고 사용하기 어려움
+- `onreadystatechange`를 사용하여 상태 변화를 감지해야 함
 
-#### 2) fetch
+### 사용 예시 (GET 요청)
 
-- Promise 기반의 API
-- XMLHttpRequest보다 사용하기 더 간편하고 직관적
-- 비동기 처리를 Promise로 다루기 때문에 코드가 깔끔하고 가독성이 좋음
-- 데이터를 요청하고 응답을 받을 때까지 기다린 후, 결과를 처리하는 방식으로 비동기 요청 처리 가능
+```js
+const xhr = new XMLHttpRequest();
+xhr.open("GET", "https://jsonplaceholder.typicode.com/posts/1", true); // true: 비동기 처리
+xhr.onreadystatechange = function () {
+  if (xhr.readyState === 4 && xhr.status === 200) {
+    console.log(JSON.parse(xhr.responseText));
+  }
+};
+xhr.send();
+```
+
+하지만 위 방식은 **콜백 지옥**이 발생하기 쉬우므로, 유지보수가 어려운 단점이 있습니다.
+
+### 2) fetch
+
+- Promise 기반의 API로, XMLHttpRequest보다 더 직관적이고 사용하기 간편한 방식
+- 응답을 Promise 형태로 처리할 수 있어 비동기 코드가 더욱 깔끔해짐
+
+### 특징
+
+- `Promise` 기반이므로 `async`/`await`과 함께 사용 가능
+- JSON 데이터를 자동 변환하지 않기 때문에 `response.json()`을 호출해야 함
+- 기본적으로 실패한 요청에 대해 자동으로 reject되지 않으므로, `response.ok`를 반드시 체크해야 함
+
+### 사용 예시 (GET 요청)
+
+```js
+fetch("https://jsonplaceholder.typicode.com/posts/1")
+  .then((response) => {
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return response.json();
+  })
+  .then((data) => console.log(data))
+  .catch((error) => console.error("Fetch error:", error));
+```
+
+### ✅ 사용 예시 (POST 요청)
+
+```js
+fetch("https://jsonplaceholder.typicode.com/posts", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    title: "New Post",
+    body: "This is a new post",
+    userId: 1,
+  }),
+})
+  .then((response) => response.json())
+  .then((data) => console.log("Created:", data))
+  .catch((error) => console.error("Error:", error));
+```
+
+🔹 `fetch()`는 XHR보다 코드가 간결하고 가독성이 좋다는 장점이 있지만, 모든 상황에서 완벽한 것은 아님
+
+### ✅ fetch의 단점
+
+1. fetch()는 HTTP 오류(404, 500 등)를 자동으로 reject하지 않음 → response.ok로 확인 필요
+
+2. fetch()는 기본적으로 타임아웃 기능이 없음 → 수동으로 설정해야 함
+
+3. 브라우저에서만 동작하며, Node.js 환경에서는 직접 사용할 수 없음 → node-fetch 같은 라이브러리 필요
 
 #### 3) axios
 
