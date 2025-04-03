@@ -1,66 +1,146 @@
-# useEffect
+## 1. useEffect
 
-`useEffect`는 부수효과(side effect)를 실행시켜주는 리액트 훅이다.
+컴포넌트가 렌더링될 때 특정 작업을 수행할 수 있도록 도와주는 React Hook.
 
-컴포넌트가 화면에 마운트 될 때 처음 실행되고, 언마운트 될 때 클린업 함수가 실행된다.
+일반적으로 **사이드 이펙트(Side Effects)**를 처리하는 데 사용된다.
 
-## 처음 한 번만 실행하기
+### 사이드 이펙트란?
+
+- 데이터 가져오기(API 요청)
+- DOM 조작
+- 타이머 설정 및 해제
+- 구독(subscription) 및 정리(clean-up)
+
+리액트는 '상태 변경에 따른 렌더링'을 목적으로 사용한다. 따라서 리액트 컴포넌트는 기본적으로 상태 값만을 다루는 순수 함수처럼 동작해야 하지만, 위와 같은 작업들은 리액트 외부 시스템과의 상호작용이 필요하기 때문에 `useEffect`를 활용하여 이를 처리한다.
+
+## 2. useEffect 기본 사용법
+
+`useEffect`의 기본 형태는 다음과 같다. 컴포넌트가 렌더링될 때마다 콜백 함수가 실행된다.
+
+```jsx
+useEffect(callback, [depList]);
+```
+
+### 2.1 마운트 시 한 번만 실행
+
+컴포넌트가 처음 마운트될 때만 실행하려면 **의존성 배열**을 빈 배열(`[]`)로 설정한다.
 
 ```jsx
 useEffect(() => {
-  // 실행할 코드
+  console.log("컴포넌트가 마운트됨");
+}, []); // 빈 의존성 배열
+```
+
+### 2.2 특정 값이 변경될 때 실행
+
+의존성 배열에 특정 값을 넣으면 해당 값이 변경될 때마다 실행된다.
+
+```jsx
+const [count, setCount] = useState(0);
+
+useEffect(() => {
+  console.log(`count가 변경됨: ${count}`);
+}, [count]); // count가 변경될 때마다 실행
+```
+
+### 2.3 정리(clean-up) 함수
+
+`useEffect`에서 반환하는 함수는 컴포넌트가 언마운트될 때 실행된다. 이를 활용하여 구독 해제, 타이머 정리 등을 할 수 있다.
+
+```jsx
+useEffect(() => {
+  const interval = setInterval(() => {
+    console.log("타이머 동작 중");
+  }, 1000);
+
+  // clean-up 함수
+  return () => {
+    clearInterval(interval);
+    console.log("타이머 정리 완료");
+  };
 }, []);
 ```
 
-컴포넌트가 처음 마운트되고 나면 리액트가 콜백 함수를 기억해뒀다가 실행한다.
+## 3. useEffect의 실행 시점
 
-그 이후로는 콜백 함수를 실행하지 않는다.
+크게 3가지 시점에 `useEffect`가 실행된다.
 
-콜백 함수가 실행되면 컴포넌트가 재렌더링 된다.
+1. **마운트 시 실행 (컴포넌트가 처음 나타날 때)**
+2. **업데이트 시 실행 (의존성 배열에 포함된 값이 변경될 때)**
+3. **언마운트 시 정리 함수 실행**
 
-## 값이 바뀔 때마다 실행하기
+React는 기본적으로 **렌더링 후 useEffect를 실행**하며, 화면이 실제로 업데이트된 후 사이드 이펙트를 수행한다.
+
+## 4. 의존성 배열의 동작 원리
+
+### 4.1 의존성 배열이 없는 경우
+
+컴포넌트가 **리렌더링될 때마다** 실행된다.
 
 ```jsx
 useEffect(() => {
-    // 실행할 코드
-}, [dep1, dep2, dep3, ...])
+  console.log("렌더링될 때마다 실행");
+});
 ```
 
-`useEffect`의 두 번째 인자로 전달되는 배열은 **의존성 배열**(Dependency List)이다.
+### 4.2 빈 배열([])을 넣은 경우
 
-이 의존성 배열에 전달한 상태 값들 중 하나라도 바뀌면 콜백 함수를 실행한다.
-
-콜백 함수가 실행되면 컴포넌트가 재렌더링 된다.
-
-## 예시 코드
+컴포넌트가 처음 **마운트될 때 한 번만 실행**된다.
 
 ```jsx
-import { useEffect, useState } from "react";
-
-function App() {
-  const [first, setFirst] = useState(1);
-  const [second, setSecond] = useState(1);
-
-  const handleFirstClick = () => setFirst(first + 1);
-
-  const handleSecondClick = () => setSecond(second + 1);
-
-  useEffect(() => {
-    console.log("렌더링 이후", first, second);
-  }, []);
-
-  console.log("렌더링", first, second);
-
-  return (
-    <div>
-      <h1>
-        {first}, {second}
-      </h1>
-      <button onClick={handleFirstClick}>First</button>
-      <button onClick={handleSecondClick}>Second</button>
-    </div>
-  );
-}
-
-export default App;
+useEffect(() => {
+  console.log("마운트 시 한 번만 실행");
+}, []);
 ```
+
+### 4.3 특정 값이 변경될 때 실행
+
+의존성 배열에 넣은 값 중 **하나라도 변경**되면 실행된다.
+
+```jsx
+const [name, setName] = useState("React");
+
+useEffect(() => {
+  console.log(`name 변경: ${name}`);
+}, [name]);
+```
+
+## 5. useEffect의 주의점
+
+### 5.1 의존성 배열을 잘못 설정하면 발생하는 문제
+
+빈 의존성 배열 전달 시 마운트 후 한 번만 실행되므로, `fetchData`가 최신 상태 값을 반영하지 못할 가능성이 있다. 이 경우 **함수형 업데이트** 또는 **useCallback**을 활용해야 한다.
+
+```jsx
+useEffect(() => {
+  fetchData();
+}, []); // 문제 발생 가능
+```
+
+### 5.2 의존성 배열을 생략하면 무한 루프 발생 가능
+
+아래 코드는 `count`가 변경될 때마다 `useEffect`가 실행되므로 **무한 렌더링**이 발생한다. 반드시 의존성 배열을 설정해야 한다.
+
+```jsx
+useEffect(() => {
+  setCount(count + 1);
+});
+```
+
+### 5.3 불필요한 의존성 추가 방지
+
+너무 많은 값을 의존성 배열에 추가하면 불필요한 렌더링이 발생할 수 있다. **최소한의 의존성만 추가하는 것이 중요하다.**
+
+```jsx
+useEffect(() => {
+  console.log("의존성 배열이 많으면 불필요한 렌더링이 증가할 수 있음");
+}, [a, b, c, d, e]);
+```
+
+## 6. 정리
+
+- `useEffect`는 **렌더링 이후 실행되는 훅**으로, 사이드 이펙트를 처리하는 데 사용된다.
+
+- 의존성 배열을 활용하여 **마운트 시 실행, 특정 값 변경 시 실행, 언마운트 시 정리 작업 수행** 등을 조절할 수 있다.
+
+- 잘못된 의존성 배열 설정은 **무한 렌더링** 또는 **예상치 못한 동작**을 초래할 수 있으므로 주의해야 한다.
